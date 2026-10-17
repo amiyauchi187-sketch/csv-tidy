@@ -1,0 +1,2 @@
+# サンプル CSV は Shift_JIS・CRLF のまま保存する（改行変換させない）
+samples/*.csv -text
