@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,6 +59,54 @@ test('既存の出力先は --force なしでは上書きしない', () => {
     assert.equal(second.status, 1);
     assert.match(second.stderr, /既に存在/);
     assert.equal(run(input, '--force').status, 0);
+  });
+});
+
+test('--report で Markdown のレポートを出力する', () => {
+  withTempCopy((input, dir) => {
+    const report = path.join(dir, 'report.md');
+    const r = run(input, '--report', report);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stderr, /レポート: /);
+
+    const md = readFileSync(report, 'utf8');
+    assert.match(md, /Shift_JIS、データ 25 行/);
+    assert.match(md, /\| 前後の空白を削除 \| 8 \| セル \|/);
+    assert.match(md, /\| 日付を YYYY-MM-DD に統一 \| 21 \| セル \|/);
+    assert.match(md, /\| 完全に重複した行を削除 \| 5 \| 行 \|/);
+  });
+});
+
+test('レポートの出力先が入力・出力と同じなら拒否し、何も書き出さない', () => {
+  withTempCopy((input, dir) => {
+    const before = readFileSync(input);
+    const out = path.join(dir, 'out.csv');
+
+    const sameAsInput = run(input, '-o', out, '-r', input);
+    assert.equal(sameAsInput.status, 1);
+    assert.match(sameAsInput.stderr, /入力ファイルと同じパス/);
+
+    const sameAsOutput = run(input, '-o', out, '-r', out);
+    assert.equal(sameAsOutput.status, 1);
+    assert.match(sameAsOutput.stderr, /出力先と同じパス/);
+
+    assert.equal(existsSync(out), false);
+    assert.deepEqual(readFileSync(input), before);
+  });
+});
+
+test('既存のレポートがあれば --force なしでは CSV も書き出さない', () => {
+  withTempCopy((input, dir) => {
+    const report = path.join(dir, 'report.md');
+    writeFileSync(report, 'old');
+    const r = run(input, '-r', report);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /レポートが既に存在/);
+    assert.equal(existsSync(path.join(dir, 'customers.tidy.csv')), false);
+    assert.equal(readFileSync(report, 'utf8'), 'old');
+
+    assert.equal(run(input, '-r', report, '--force').status, 0);
+    assert.notEqual(readFileSync(report, 'utf8'), 'old');
   });
 });
 

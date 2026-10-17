@@ -10,7 +10,7 @@ csv-tidy is a Node.js CLI (ESM, Node >= 18) that cleans a dirty CSV:
 - Trims every cell
 - Normalizes date-like columns to `YYYY-MM-DD`
 - Removes exact duplicate rows
-- Prints how many fixes it made
+- Prints how many fixes it made, and with `--report` writes per-rule fix counts as Markdown
 
 It has **no dependencies by design**: encoding detection uses `TextDecoder`, and the CSV parser is hand-written. Don't add packages without a clear reason.
 
@@ -18,11 +18,11 @@ It has **no dependencies by design**: encoding detection uses `TextDecoder`, and
 
 - `npm test` runs all tests (`node --test`, built-in runner, files in `test/`)
 - `node --test --test-name-pattern="<test name>"` runs a single test
-- `node bin/csv-tidy.js samples/customers_dirty.csv [-o out.csv] [--force] [--bom]` runs the CLI. The default output is `<name>.tidy.csv`, which is gitignored.
+- `node bin/csv-tidy.js samples/customers_dirty.csv [-o out.csv] [-r report.md] [--force] [--bom]` runs the CLI. The default output is `<name>.tidy.csv`, which is gitignored.
 
 ## Architecture
 
-`bin/csv-tidy.js` handles I/O, argument parsing and the summary, which goes to stderr. Its pipeline: `detectAndDecode` → `parse` → `tidy` → `stringify`.
+`bin/csv-tidy.js` handles I/O, argument parsing and the summary, which goes to stderr. Its pipeline: `detectAndDecode` → `parse` → `tidy` → `stringify`, plus `renderReport` when `--report` is given.
 
 - `src/encoding.js`
   - Checks for a BOM first.
@@ -39,7 +39,10 @@ It has **no dependencies by design**: encoding detection uses `TextDecoder`, and
   3. Normalize the dates. Values that don't parse are kept as-is and reported in `stats.unparsedDates`.
   4. Dedup. It must run last so that rows differing only in whitespace or date format are caught.
 
-The CLI refuses an output path equal to the input path (compared via realpath, case-insensitively on Windows). It only overwrites an existing output with `--force`, implemented with the `wx` write flag.
+  `stats` also carries per-column counts (`trimmedByColumn`, `datesNormalizedByColumn`, in header order) and `duplicateRows` (`{ row, duplicateOf }`). Row numbers count the header as row 1.
+- `src/report.js`: `renderReport` is a pure function that turns `stats` into the Markdown report. It escapes `|` and newlines in table cells.
+
+The CLI refuses an output or report path equal to the input path, and a report path equal to the output (compared via realpath, case-insensitively on Windows). Without `--force`, it checks that neither the output nor the report exists *before* writing anything, so it never leaves one written without the other. Writes also use the `wx` flag.
 
 ## Sample data: `samples/customers_dirty.csv`
 
