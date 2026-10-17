@@ -1,0 +1,26 @@
+顧客ID,氏名,メールアドレス,電話番号,都道府県,登録日
+C001,山田 太郎,taro.yamada@example.com,03-1234-5678,東京都,2023-04-01
+C002,  佐藤 花子,hanako.sato@example.com ,06-2345-6789,大阪府,2023/4/5
+C003,鈴木 一郎 ,ichiro.suzuki@example.com,052-345-6789,  愛知県,2023/04/12
+C004,　田中 美咲　,misaki.tanaka@example.com,092-456-7890,福岡県,令和5年5月20日
+C005,高橋 健太,kenta.takahashi@example.com,011-567-8901,北海道,R5.6.3
+C006,伊藤 由美,yumi.ito@example.com,022-678-9012,宮城県,2023年7月15日
+C001,山田 太郎,taro.yamada@example.com,03-1234-5678,東京都,2023-04-01
+C007,渡辺 翔,sho.watanabe@example.com,045-789-0123,神奈川県,20230802
+C008,中村 さくら,sakura.nakamura@example.com,075-890-1234,京都府,2023.8.19
+C009,小林 大輔,daisuke.kobayashi@example.com , 082-901-2345 ,広島県,平成31年4月30日
+C010,加藤 愛,ai.kato@example.com,098-012-3456,沖縄県,令和元年5月1日
+C002,佐藤 花子,hanako.sato@example.com,06-2345-6789,大阪府,2023/04/05
+C011,吉田 拓也,takuya.yoshida@example.com,025-123-4567,新潟県,H30/12/3
+C012,山口 真由,mayu.yamaguchi@example.com,087-234-5678,香川県,2018/1/9
+C013,松本 涼,ryo.matsumoto@example.com,026-345-6789,長野県,R6/2/29
+C014,井上 千尋,chihiro.inoue@example.com,099-456-7890,鹿児島県,2024年3月1日
+C008,中村 さくら,sakura.nakamura@example.com,075-890-1234,京都府,2023.8.19
+C015,木村 陸,riku.kimura@example.com,048-567-8901,埼玉県,  2024-04-10
+C016,林 美穂,miho.hayashi@example.com,043-678-9012,千葉県,令和6年5月7日
+C017,清水 隼人,hayato.shimizu@example.com,054-789-0123,静岡県,2024/5/30
+C004,田中 美咲,misaki.tanaka@example.com,092-456-7890,福岡県,2023-05-20
+C018,山崎 彩,aya.yamazaki@example.com,086-890-1234,岡山県,R6.7.7
+C019,森 健二,kenji.mori@example.com,089-901-2345,愛媛県,"2024年 8月 1日"
+C020,池田 恵,megumi.ikeda@example.com,078-012-3456,兵庫県,24/9/15
+C005,高橋 健太,kenta.takahashi@example.com,011-567-8901,北海道,R5.6.3
