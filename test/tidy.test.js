@@ -43,6 +43,17 @@ test('正規化した後に完全一致する行を削除し、最初の行を�
   ]);
   assert.deepEqual(rows, [['id', '日付'], ['1', '2023-04-05'], ['2', '2023-04-05']]);
   assert.equal(stats.duplicatesRemoved, 1);
+  assert.deepEqual(stats.duplicateRows, [{ row: 3, duplicateOf: 2 }]);
+});
+
+test('列ごとの修正件数をヘッダーの列順で数える', () => {
+  const { stats } = tidy([
+    ['a', 'b', '日付'],
+    ['x', ' y', '2023/1/1'],
+    [' x', 'y ', '2023-01-02'],
+  ]);
+  assert.deepEqual(Object.entries(stats.trimmedByColumn), [['a', 1], ['b', 2]]);
+  assert.deepEqual(stats.datesNormalizedByColumn, { 日付: 1 });
 });
 
 test('サンプル CSV を整形する', () => {
@@ -51,6 +62,9 @@ test('サンプル CSV を整形する', () => {
 
   assert.equal(rows.length - 1, 20);
   assert.equal(stats.duplicatesRemoved, 5);
+  assert.deepEqual(stats.trimmedByColumn, { 氏名: 3, メールアドレス: 2, 電話番号: 1, 都道府県: 1, 登録日: 1 });
+  assert.deepEqual(stats.datesNormalizedByColumn, { 登録日: 21 });
+  assert.deepEqual(stats.duplicateRows.map((d) => [d.row, d.duplicateOf]), [[8, 2], [13, 3], [18, 10], [22, 5], [26, 6]]);
   assert.deepEqual(stats.dateColumns, ['登録日']);
   assert.deepEqual(stats.unparsedDates, []);
 

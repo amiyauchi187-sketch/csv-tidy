@@ -14,16 +14,28 @@ import { normalizeDate } from './date.js';
 export function tidy(rows, { dateThreshold = 0.8 } = {}) {
   const stats = {
     trimmed: 0,
+    trimmedByColumn: {},
     datesNormalized: 0,
+    datesNormalizedByColumn: {},
     duplicatesRemoved: 0,
+    duplicateRows: [],
     dateColumns: [],
     unparsedDates: [],
   };
   if (rows.length === 0) return { rows: [], stats };
 
-  const trimmed = rows.map((r) => r.map((cell) => {
+  const columnName = (col) => rows[0][col]?.trim() || `列${col + 1}`;
+  const countUp = (counts, col) => {
+    const name = columnName(col);
+    counts[name] = (counts[name] ?? 0) + 1;
+  };
+
+  const trimmed = rows.map((r) => r.map((cell, col) => {
     const t = cell.trim();
-    if (t !== cell) stats.trimmed++;
+    if (t !== cell) {
+      stats.trimmed++;
+      countUp(stats.trimmedByColumn, col);
+    }
     return t;
   }));
   const [header, ...body] = trimmed;
@@ -36,33 +48,44 @@ export function tidy(rows, { dateThreshold = 0.8 } = {}) {
     const parsable = values.filter((v) => normalizeDate(v) !== null).length;
     if (parsable / values.length >= dateThreshold) dateCols.push(col);
   }
-  stats.dateColumns = dateCols.map((col) => header[col] ?? `列${col + 1}`);
+  stats.dateColumns = dateCols.map(columnName);
 
+  // 行番号はヘッダーを 1 行目として数える
   body.forEach((row, i) => {
     for (const col of dateCols) {
       const value = row[col];
       if (value === undefined || value === '') continue;
       const normalized = normalizeDate(value);
       if (normalized === null) {
-        // ヘッダーを 1 行目として数えた行番号
-        stats.unparsedDates.push({ row: i + 2, column: header[col] ?? `列${col + 1}`, value });
+        stats.unparsedDates.push({ row: i + 2, column: columnName(col), value });
       } else if (normalized !== value) {
         row[col] = normalized;
         stats.datesNormalized++;
+        countUp(stats.datesNormalizedByColumn, col);
       }
     }
   });
 
-  const seen = new Set();
-  const unique = body.filter((row) => {
+  const firstRowByKey = new Map();
+  const unique = body.filter((row, i) => {
     const key = JSON.stringify(row);
-    if (seen.has(key)) {
+    if (firstRowByKey.has(key)) {
       stats.duplicatesRemoved++;
+      stats.duplicateRows.push({ row: i + 2, duplicateOf: firstRowByKey.get(key) });
       return false;
     }
-    seen.add(key);
+    firstRowByKey.set(key, i + 2);
     return true;
   });
+
+  // 列ごとの件数はヘッダーの列順に並べる
+  const byHeaderOrder = (counts) => Object.fromEntries(
+    Array.from({ length: width }, (_, col) => columnName(col))
+      .filter((name) => name in counts)
+      .map((name) => [name, counts[name]]),
+  );
+  stats.trimmedByColumn = byHeaderOrder(stats.trimmedByColumn);
+  stats.datesNormalizedByColumn = byHeaderOrder(stats.datesNormalizedByColumn);
 
   return { rows: [header, ...unique], stats };
 }
